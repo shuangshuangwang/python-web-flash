@@ -7,6 +7,8 @@ from datetime import datetime
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
+
+    # unique 保证唯一
     username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(128))
@@ -27,6 +29,18 @@ class User(UserMixin, db.Model):
         digest = md5(self.email.lower().encode('utf-8')).hexdigest()
         return 'https://www.gravatar.com/avatar/{}?d=identicon&s={}'.format(
             digest, size)
+
+    @staticmethod
+    def make_unique_username(username):
+        if User.query.filter_by(username=username).first() == None:
+            return username
+        version = 2
+        while True:
+            new_username= username + str(version)
+            if User.query.filter_by(username=new_username).first() == None:
+                break
+            version += 1
+        return new_username
 
 @login.user_loader
 def load_user(id):
